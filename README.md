@@ -41,83 +41,44 @@ Esto creará la tabla ift en la base de datos asterisk. Ahora crearemos el AGI p
 
 
 Para el siguiente paso, crearemos un AGI que se encargue de consultar la tabla creada en el paso anterior. El AGI lo crearemos con el nombre /var/lib/asterisk/agi-bin/ift.php
-function test() {
-#!/usr/bin/php -q
-&lt;?php
+
+ift.php  se encuentra en el repositorio. 
+
+**Para que funcione es necesario cambiar:
+
+-La constante LOCAL. Reemplázala por el código de área de tu población.
+-Los parámetros de conexión a tu base de datos.
+
+**El AGI es bastante sencillo y lo que hace es:
+
+1.Recibe como argumento un número de 10 dígitos. No debe tener más ni menos.
+2.Descompone ese número y extrae el código de área, ya sea de 2 dígitos (México, Guadalajara o Monterrey) o de 3 dígitos (resto del país) y la serie del número local.
+3.Compara estos números contra la base de datos creada.
+ -Si encuentra el registro, lo cataloga de acuerdo al campo movil de la tabla.
+ -Si no lo encuentra, lo cataloga como fijo.
+4.Para la entrega de resultados, el AGI crea las siguientes variables:
+ -${MOVIL}. Es 0 o 1, dependiendo si el número se considera fijo o móvil, respectivamente.
+ -${PREFIJO} es el prefijo de marcación: 01, 044 o 045.
+ -${COMPLETO} contiene el número tal cual se tiene que marcar de acuerdo al plan de numeración de México. Es la combinación de ${PREFIJO} y de ${EXTEN}. Si el número es fijo y está en el mismo código de área que el AGI, entonces te lo entrega en 7 dígitos.
+
+**Ejemplos de corrida. Asumimos que la variable LOCAL es configurada con 33 (Guadalajara):
+
+1.AGI(ift.php,5546144400) te da:
+ -${MOVIL} es 0, ya que el número es fijo.
+ -${PREFIJO} es 01, ya que es considerado larga distancia nacional.
+ -${COMPLETO} es 013346144400
+ -AGI(ift.php,5513208860) te da:
+ -${MOVIL} es 1, ya que el número es celular.
+ -${PREFIJO} es 045, ya que es considerado celular con LDN.
+ -${COMPLETO} es 0455513208860.
  
-// Cambiar esta constante por el codigo de area local desde donde se originan las llamadas
-define('LOCAL','55');
+ **Paso 3. Crea el plan de marcación
  
-// Parametros de acceso a la base de datos.
-$db['user'] = 'asteriskuser';
-$db['pass'] = 'asteriskpass';
-$db['name'] = 'asterisk';
-$db['host'] = 'sql.enlaza.mx';
- 
- 
-// ***************** No cambiar nada a partir de este punto
- 
-require_once &quot;phpagi.php&quot;;
-$agi = new AGI();
- 
- 
- 
-if ( (!is_numeric($argv[1])) || (strlen($argv[1]) &lt; 10) ) {
-    $agi-&gt;verbose('No se proporciono un numero de 10 digitos');
-    $agi-&gt;set_variable('MOVIL',0);
-    $agi-&gt;set_variable('PREFIJO','');
-    $agi-&gt;set_variable('COMPLETO','');
-    exit;
-}
- 
-// Nos quedamos solo con los ultimos 10 digitos para asegurar que quitamos cualquier prefijo
-$numero = substr($argv[1],-10);
- 
-if (!$data = mysql_connect($db['host'],$db['user'],$db['pass'])) {
-    $agi-&gt;verbose('Error de conexion a la BD');
-    $agi-&gt;set_variable('MOVIL',0);
-    $agi-&gt;set_variable('PREFIJO','');
-    $agi-&gt;set_variable('COMPLETO','');
-    exit;
-}
- 
-// Definimos codigos de area de 2 digitos para conocer cual es el codigo de area y cual es el numero local
-$areas = array('55','81','33');
-if (in_array(substr($numero,0,2),$areas)) {
-    $area = substr($numero,0,2); 
-    $local= substr($numero,2); 
-    $serie= substr($local,0,4);
-}
-else {
-    $area = substr($numero,0,3);
-    $local= substr($numero,3); 
-    $serie= substr($local,0,3);
-}
- 
-$query = &quot;SELECT movil FROM &quot;.$db['name'].&quot;.ift WHERE SUBSTRING('$numero',7) BETWEEN inicial AND final AND `area` = $area AND serie = $serie LIMIT 1&quot;;
-$result = mysql_query($query,$data);
-$row = mysql_fetch_array($result);
-$agi-&gt;set_variable('MOVIL',$row['movil']);
- 
-if (substr($numero,0,strlen(LOCAL)) == LOCAL) {
-    if ($row['movil'] == 1) {
-        $agi-&gt;set_variable('PREFIJO','044');
-        $agi-&gt;set_variable('COMPLETO', '044'.$numero);
-    }
-    else {
-        $agi-&gt;set_variable('PREFIJO','');
-        $agi-&gt;set_variable('COMPLETO', $local);
-    }
-}
-else {
-    if ($row['movil'] == 1) {
-        $agi-&gt;set_variable('PREFIJO','045');
-        $agi-&gt;set_variable('COMPLETO', '045'.$numero);
-    }
-    else {
-        $agi-&gt;set_variable('PREFIJO','01');
-        $agi-&gt;set_variable('COMPLETO', '01'.$numero);
-    }
-}
-exit;
-}
+El último paso es utilizar las variables que el AGI crea para hacer la marcación. El plan de marcación se colocará en el extensions.conf de /etc/asterisk, y será algo más o menos así:
+
+***
+exten =&gt; _NXXXXXXXXX,1,AGI(ift.php,${EXTEN})
+same =&gt; n,Dial(DAHDI/g0/${COMPLETO},,Tt)
+***
+
+
