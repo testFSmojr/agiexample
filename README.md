@@ -44,35 +44,35 @@ Para el siguiente paso, crearemos un AGI que se encargue de consultar la tabla c
 
 ift.php  se encuentra en el repositorio. 
 
-**Para que funcione es necesario cambiar:
+**Para que funcione es necesario cambiar:**
 
 -La constante LOCAL. Reemplázala por el código de área de tu población.
 -Los parámetros de conexión a tu base de datos.
 
-**El AGI es bastante sencillo y lo que hace es:
+**El AGI es bastante sencillo y lo que hace es:**
 
-1.Recibe como argumento un número de 10 dígitos. No debe tener más ni menos.
-2.Descompone ese número y extrae el código de área, ya sea de 2 dígitos (México, Guadalajara o Monterrey) o de 3 dígitos (resto del país) y la serie del número local.
-3.Compara estos números contra la base de datos creada.
+1. Recibe como argumento un número de 10 dígitos. No debe tener más ni menos.
+2. Descompone ese número y extrae el código de área, ya sea de 2 dígitos (México, Guadalajara o Monterrey) o de 3 dígitos (resto del país) y la serie del número local.
+3. Compara estos números contra la base de datos creada.
  -Si encuentra el registro, lo cataloga de acuerdo al campo movil de la tabla.
  -Si no lo encuentra, lo cataloga como fijo.
-4.Para la entrega de resultados, el AGI crea las siguientes variables:
- -${MOVIL}. Es 0 o 1, dependiendo si el número se considera fijo o móvil, respectivamente.
- -${PREFIJO} es el prefijo de marcación: 01, 044 o 045.
- -${COMPLETO} contiene el número tal cual se tiene que marcar de acuerdo al plan de numeración de México. Es la combinación de ${PREFIJO} y de ${EXTEN}. Si el número es fijo y está en el mismo código de área que el AGI, entonces te lo entrega en 7 dígitos.
+4. Para la entrega de resultados, el AGI crea las siguientes variables:
+ - ${MOVIL}. Es 0 o 1, dependiendo si el número se considera fijo o móvil, respectivamente.
+ - ${PREFIJO} es el prefijo de marcación: 01, 044 o 045.
+ - ${COMPLETO} contiene el número tal cual se tiene que marcar de acuerdo al plan de numeración de México. Es la combinación de ${PREFIJO} y de ${EXTEN}. Si el número es fijo y está en el mismo código de área que el AGI, entonces te lo entrega en 7 dígitos.
 
-**Ejemplos de corrida. Asumimos que la variable LOCAL es configurada con 33 (Guadalajara):
+**Ejemplos de corrida. Asumimos que la variable LOCAL es configurada con 33 (Guadalajara):**
 
-1.AGI(ift.php,5546144400) te da:
- -${MOVIL} es 0, ya que el número es fijo.
- -${PREFIJO} es 01, ya que es considerado larga distancia nacional.
- -${COMPLETO} es 013346144400
- -AGI(ift.php,5513208860) te da:
- -${MOVIL} es 1, ya que el número es celular.
- -${PREFIJO} es 045, ya que es considerado celular con LDN.
- -${COMPLETO} es 0455513208860.
+1. AGI(ift.php,5546144400) te da:
+ - ${MOVIL} es 0, ya que el número es fijo.
+ - ${PREFIJO} es 01, ya que es considerado larga distancia nacional.
+ - ${COMPLETO} es 013346144400
+ - AGI(ift.php,5513208860) te da:
+ - ${MOVIL} es 1, ya que el número es celular.
+ - ${PREFIJO} es 045, ya que es considerado celular con LDN.
+ - ${COMPLETO} es 0455513208860.
  
- **Paso 3. Crea el plan de marcación
+ **Paso 3. Crea el plan de marcación**
  
 El último paso es utilizar las variables que el AGI crea para hacer la marcación. El plan de marcación se colocará en el extensions.conf de /etc/asterisk, y será algo más o menos así:
 
