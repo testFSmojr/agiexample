@@ -6,7 +6,7 @@ Afortunadamente, el Instituto Federal de Telecomunicaciones (IFT) publica una ba
 
 Esto resulta muy conveniente de hacer en sistemas de marcación predictiva donde las listas pueden estar capturadas a 10 dígitos y nosotros convertir cada número a fijo o móvil según la base nos lo diga. En Asterisk, esta funcionalidad es muy fácil de implementar con una base de datos, una función personalizada de ODBC (func_odbc) o un AGI. Aquí te dejo la guía de como lograrlo utilizando un AGI.
 
-Antes de comenzar, asumimos lo siguiente:
+**Antes de comenzar, asumimos lo siguiente:**
 
 Que ya tienes instalado PHP en tu sistema.
 Que ya tienes instalado y cuentas con experiencia con MySQL y que sabes como importar tablas a partir de un archivo SQL.
@@ -15,7 +15,7 @@ Que entiendes el plan de marcación básico.
 Dando esto por sentado, comencemos:
 
 
-Paso 1. Consigue el listado de numeración del IFT
+**Paso 1. Consigue el listado de numeración del IFT**
 
 Limpiar la lista y dejar solamente estos 5 campos:
 
@@ -36,12 +36,12 @@ mysql -p asterisk &lt; bdift_safe.sql
 Esto creará la tabla ift en la base de datos asterisk. Ahora crearemos el AGI para poder consultarla
 
 
-Paso 2. Crea el AGI ift.php
+**Paso 2. Crea el AGI ift.php**
 
 
 
 Para el siguiente paso, crearemos un AGI que se encargue de consultar la tabla creada en el paso anterior. El AGI lo crearemos con el nombre /var/lib/asterisk/agi-bin/ift.php
-
+function test() {
 #!/usr/bin/php -q
 &lt;?php
  
@@ -120,3 +120,4 @@ else {
     }
 }
 exit;
+}
