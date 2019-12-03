@@ -8,7 +8,7 @@ define('LOCAL','55');
 $db['user'] = 'asteriskuser';
 $db['pass'] = 'asteriskpass';
 $db['name'] = 'asterisk';
-$db['host'] = 'sql.enlaza.mx';
+$db['host'] = 'localhost';
  
  
 // ***************** No cambiar nada a partir de este punto
